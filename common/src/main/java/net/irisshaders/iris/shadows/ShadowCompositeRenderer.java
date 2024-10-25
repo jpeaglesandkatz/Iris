@@ -233,12 +233,15 @@ public class ShadowCompositeRenderer {
 		ProgramUniforms.clearActiveUniforms();
 		GlStateManager._glUseProgram(0);
 
+		// TODO IMS: Apparantly we are not supposed to do this for shadowcomp...
+		/*
 		for (int i = 0; i < renderTargets.getRenderTargetCount(); i++) {
 			// Reset mipmapping states at the end of the frame.
 			if (renderTargets.get(i) != null) {
 				resetRenderTarget(renderTargets.get(i));
 			}
 		}
+		 */
 
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 	}

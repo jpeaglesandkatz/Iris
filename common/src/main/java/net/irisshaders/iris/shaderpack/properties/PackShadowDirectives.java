@@ -171,7 +171,7 @@ public class PackShadowDirectives {
 		directives.acceptConstBooleanDirective("generateShadowColorMipmap", mipmap -> samplers.forEach((i, sampler) -> sampler.setMipmap(mipmap)));
 
 		// Find any per-sampler overrides for the shadow depth mipmap setting
-		for (int i = 0; i < samplers.size(); i++) {
+		for (int i = 0; i < PackShadowDirectives.MAX_SHADOW_COLOR_BUFFERS_IRIS; i++) {
 			String name = "shadowcolor" + i + "Mipmap";
 			directives.acceptConstBooleanDirective(name, samplers.computeIfAbsent(i, sa -> new SamplingSettings())::setMipmap);
 
@@ -197,7 +197,7 @@ public class PackShadowDirectives {
 	}
 
 	private static void acceptColorFilteringSettings(DirectiveHolder directives, Int2ObjectMap<SamplingSettings> samplers) {
-		for (int i = 0; i < samplers.size(); i++) {
+		for (int i = 0; i < PackShadowDirectives.MAX_SHADOW_COLOR_BUFFERS_IRIS; i++) {
 			String name = "shadowcolor" + i + "Nearest";
 
 			directives.acceptConstBooleanDirective(name, samplers.computeIfAbsent(i, sa -> new SamplingSettings())::setNearest);

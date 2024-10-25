@@ -149,7 +149,7 @@ public class MixinSodiumGameOptionPages {
 				new Component[]{Component.translatable("options.graphics.fast"), Component.translatable("options.graphics.fancy")}))
 			.setBinding(
 				(opts, value) -> opts.graphicsMode().set(value.toVanilla()),
-				opts -> SupportedGraphicsMode.fromVanilla(opts.graphicsMode().get()))
+				opts -> SupportedGraphicsMode.fromVanilla(opts.graphicsMode()))
 			.setImpact(OptionImpact.HIGH)
 			.setFlags(OptionFlag.REQUIRES_RENDERER_RELOAD)
 			.build();
