@@ -126,7 +126,7 @@ dependencies {
     includeDep("org.sinytra.forgified-fabric-api:fabric-rendering-data-attachment-v1:0.3.48+73761d2e19")
     includeDep("org.sinytra.forgified-fabric-api:fabric-block-view-api-v2:1.0.10+9afaaf8c19")
 
-    implementation("net.caffeinemc", "sodium-neoforge", "0.6.0-snapshot+mc1.21.2-rc1-local")
+    implementation("maven.modrinth", "sodium", "mc1.21.2-0.6.0-beta.3-neoforge")
     includeAdditional("io.github.douira:glsl-transformer:2.0.1")
     includeAdditional("org.anarres:jcpp:1.4.14")
 }
