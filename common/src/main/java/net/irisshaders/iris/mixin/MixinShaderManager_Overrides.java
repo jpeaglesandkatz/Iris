@@ -11,6 +11,7 @@ import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.pipeline.programs.ShaderAccess;
 import net.irisshaders.iris.pipeline.programs.ShaderKey;
 import net.irisshaders.iris.pipeline.programs.ShaderOverrides;
+import net.irisshaders.iris.platform.IrisPlatformHelpers;
 import net.irisshaders.iris.shadows.ShadowRenderingState;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.CompiledShaderProgram;
@@ -56,6 +57,7 @@ public abstract class MixinShaderManager_Overrides {
 			coreShaderMap.put(CoreShaders.RENDERTYPE_ARMOR_ENTITY_GLINT, p -> ShaderKey.GLINT);
 			coreShaderMap.put(CoreShaders.RENDERTYPE_ENTITY_CUTOUT_NO_CULL, p -> getCutout(p));
 			coreShaderMap.put(CoreShaders.RENDERTYPE_ENTITY_CUTOUT_NO_CULL_Z_OFFSET, p -> getCutout(p));
+			coreShaderMap.put(CoreShaders.RENDERTYPE_ENTITY_SHADOW, p -> getCutout(p));
 			coreShaderMap.put(CoreShaders.RENDERTYPE_ENTITY_SMOOTH_CUTOUT, p -> getCutout(p));
 			coreShaderMap.put(CoreShaders.RENDERTYPE_ENTITY_TRANSLUCENT, MixinShaderManager_Overrides::getTranslucent);
 			coreShaderMap.put(CoreShaders.RENDERTYPE_ENTITY_TRANSLUCENT_EMISSIVE, p -> ShaderKey.ENTITIES_EYES_TRANS);
@@ -70,6 +72,7 @@ public abstract class MixinShaderManager_Overrides {
 			coreShaderMap.put(CoreShaders.RENDERTYPE_TEXT_BACKGROUND, p -> ShaderKey.TEXT_BG);
 			coreShaderMap.put(CoreShaders.RENDERTYPE_TEXT_BACKGROUND_SEE_THROUGH, p -> ShaderKey.TEXT_BG);
 			coreShaderMap.put(CoreShaders.RENDERTYPE_TEXT, p -> ShaderOverrides.isBlockEntities((IrisRenderingPipeline) p) ? ShaderKey.TEXT_BE : ShaderKey.TEXT);
+			coreShaderMap.put(CoreShaders.RENDERTYPE_TEXT_SEE_THROUGH, p -> ShaderOverrides.isBlockEntities((IrisRenderingPipeline) p) ? ShaderKey.TEXT_BE : ShaderKey.TEXT);
 			coreShaderMap.put(CoreShaders.RENDERTYPE_TEXT_INTENSITY, p -> ShaderOverrides.isBlockEntities((IrisRenderingPipeline) p) ? ShaderKey.TEXT_INTENSITY_BE : ShaderKey.TEXT_INTENSITY);
 			coreShaderMap.put(CoreShaders.RENDERTYPE_TEXT_INTENSITY_SEE_THROUGH, p -> ShaderOverrides.isBlockEntities((IrisRenderingPipeline) p) ? ShaderKey.TEXT_INTENSITY_BE : ShaderKey.TEXT_INTENSITY);
 			coreShaderMap.put(CoreShaders.RENDERTYPE_EYES, p -> ShaderKey.ENTITIES_EYES);
@@ -102,6 +105,7 @@ public abstract class MixinShaderManager_Overrides {
 			coreShaderMapShadow.put(CoreShaders.RENDERTYPE_ENTITY_CUTOUT_NO_CULL, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
 			coreShaderMapShadow.put(CoreShaders.RENDERTYPE_ENTITY_CUTOUT_NO_CULL_Z_OFFSET, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
 			coreShaderMapShadow.put(CoreShaders.RENDERTYPE_ENTITY_SMOOTH_CUTOUT, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
+			coreShaderMapShadow.put(CoreShaders.RENDERTYPE_ENTITY_SHADOW, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
 			coreShaderMapShadow.put(CoreShaders.RENDERTYPE_ENTITY_TRANSLUCENT, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
 			coreShaderMapShadow.put(CoreShaders.RENDERTYPE_ENTITY_TRANSLUCENT_EMISSIVE, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
 			coreShaderMapShadow.put(CoreShaders.RENDERTYPE_ENTITY_ALPHA, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
@@ -115,6 +119,7 @@ public abstract class MixinShaderManager_Overrides {
 			coreShaderMapShadow.put(CoreShaders.RENDERTYPE_TEXT_BACKGROUND, p -> ShaderKey.SHADOW_TEXT_BG);
 			coreShaderMapShadow.put(CoreShaders.RENDERTYPE_TEXT_BACKGROUND_SEE_THROUGH, p -> ShaderKey.SHADOW_TEXT_BG);
 			coreShaderMapShadow.put(CoreShaders.RENDERTYPE_TEXT, p -> ShaderKey.SHADOW_TEXT);
+			coreShaderMapShadow.put(CoreShaders.RENDERTYPE_TEXT_SEE_THROUGH, p -> ShaderKey.SHADOW_TEXT);
 			coreShaderMapShadow.put(CoreShaders.RENDERTYPE_TEXT_INTENSITY, p -> ShaderKey.SHADOW_TEXT_INTENSITY);
 			coreShaderMapShadow.put(CoreShaders.RENDERTYPE_TEXT_INTENSITY_SEE_THROUGH, p -> ShaderKey.SHADOW_TEXT_INTENSITY);
 			coreShaderMapShadow.put(CoreShaders.RENDERTYPE_EYES, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
@@ -195,6 +200,8 @@ public abstract class MixinShaderManager_Overrides {
 
 			if (program != null) {
 				cir.setReturnValue(program);
+			} else if (IrisPlatformHelpers.getInstance().isDevelopmentEnvironment()) {
+				Iris.logger.error("missing program " + shaderProgram.configId(), new Throwable());
 			}
 		} else {
 			if (shaderProgram == ShaderAccess.MEKANISM_FLAME) {
