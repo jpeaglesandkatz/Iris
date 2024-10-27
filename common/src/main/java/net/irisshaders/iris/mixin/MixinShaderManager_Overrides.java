@@ -51,6 +51,7 @@ public abstract class MixinShaderManager_Overrides {
 			coreShaderMap.put(CoreShaders.RENDERTYPE_ENTITY_CUTOUT, p -> getCutout(p));
 			coreShaderMap.put(CoreShaders.RENDERTYPE_ENTITY_SOLID, p -> getSolid(p));
 			coreShaderMap.put(CoreShaders.RENDERTYPE_ARMOR_CUTOUT_NO_CULL, p -> getCutout(p));
+			coreShaderMap.put(CoreShaders.RENDERTYPE_ARMOR_TRANSLUCENT, p -> getTranslucent(p));
 			coreShaderMap.put(CoreShaders.RENDERTYPE_GLINT, p -> ShaderKey.GLINT);
 			coreShaderMap.put(CoreShaders.RENDERTYPE_ENTITY_GLINT, p -> ShaderKey.GLINT);
 			coreShaderMap.put(CoreShaders.RENDERTYPE_GLINT_TRANSLUCENT, p -> ShaderKey.GLINT);
@@ -115,6 +116,7 @@ public abstract class MixinShaderManager_Overrides {
 			coreShaderMapShadow.put(CoreShaders.RENDERTYPE_CUTOUT_MIPPED, p -> ShaderKey.SHADOW_TERRAIN_CUTOUT);
 			coreShaderMapShadow.put(CoreShaders.RENDERTYPE_TRANSLUCENT, p -> ShaderOverrides.isBlockEntities((IrisRenderingPipeline) p) ? ShaderKey.SHADOW_ENTITIES_CUTOUT : ShaderKey.SHADOW_TERRAIN_CUTOUT);
 			coreShaderMapShadow.put(CoreShaders.RENDERTYPE_TRIPWIRE, p -> ShaderKey.SHADOW_TERRAIN_CUTOUT);
+			coreShaderMapShadow.put(CoreShaders.RENDERTYPE_ARMOR_TRANSLUCENT, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
 			coreShaderMapShadow.put(CoreShaders.RENDERTYPE_LINES, p -> ShaderKey.SHADOW_LINES);
 			coreShaderMapShadow.put(CoreShaders.RENDERTYPE_TEXT_BACKGROUND, p -> ShaderKey.SHADOW_TEXT_BG);
 			coreShaderMapShadow.put(CoreShaders.RENDERTYPE_TEXT_BACKGROUND_SEE_THROUGH, p -> ShaderKey.SHADOW_TEXT_BG);
