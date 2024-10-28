@@ -241,7 +241,8 @@ public class MixinLevelRenderer {
 		return new OuterWrappedRenderType("iris:is_outline", type, IsOutlineRenderStateShard.INSTANCE);
 	}
 
-	@Inject(method = { "method_62214", NeoLambdas.NEO_RENDER_MAIN_PASS }, require = 1, at = @At(value = "CONSTANT", args = "stringValue=translucent"))
+	// TODO this needs to be more consistent.
+	@Inject(method = { "method_62214", NeoLambdas.NEO_RENDER_MAIN_PASS }, require = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;endBatch()V", ordinal = 1))
 	private void iris$beginTranslucents(CallbackInfo ci, @Local(argsOnly = true) DeltaTracker deltaTracker, @Local(ordinal = 0, argsOnly = true) Matrix4f modelMatrix, @Local(argsOnly = true) Camera camera) {
 		pipeline.beginHand();
 		HandRenderer.INSTANCE.renderSolid(modelMatrix, deltaTracker.getGameTimeDeltaPartialTick(true), camera, Minecraft.getInstance().gameRenderer, pipeline);

@@ -78,7 +78,8 @@ public class MixinLevelRenderer {
 		}
 	}
 
-	@Inject(method = { "method_62214", NeoLambdas.NEO_RENDER_MAIN_PASS }, require = 1, at = @At(value = "CONSTANT", args = "stringValue=translucent"))
+	// TODO make this more consistent
+	@Inject(method = { "method_62214", NeoLambdas.NEO_RENDER_MAIN_PASS }, require = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/RenderType;waterMask()Lnet/minecraft/client/renderer/RenderType;"))
 	private void batchedentityrendering$beginTranslucents(CallbackInfo ci) {
 		if (renderBuffers.bufferSource() instanceof FullyBufferedMultiBufferSource fullyBufferedMultiBufferSource) {
 			fullyBufferedMultiBufferSource.readyUp();
@@ -100,7 +101,7 @@ public class MixinLevelRenderer {
 	}
 
 
-	@Inject(method = { "method_62214", NeoLambdas.NEO_RENDER_MAIN_PASS }, require = 1, at = @At(value = "CONSTANT", args = "stringValue=translucent", shift = At.Shift.AFTER))
+	@Inject(method = { "method_62214", NeoLambdas.NEO_RENDER_MAIN_PASS }, require = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderSectionLayer(Lnet/minecraft/client/renderer/RenderType;DDDLorg/joml/Matrix4f;Lorg/joml/Matrix4f;)V", ordinal = 3))
 	private void batchedentityrendering$endTranslucents(CallbackInfo ci) {
 		if (WorldRenderingSettings.INSTANCE.shouldSeparateEntityDraws()) {
 			this.renderBuffers.bufferSource().endBatch();
