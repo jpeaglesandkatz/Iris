@@ -63,6 +63,7 @@ public abstract class MixinShaderManager_Overrides {
 			coreShaderMap.put(CoreShaders.RENDERTYPE_ENTITY_TRANSLUCENT, MixinShaderManager_Overrides::getTranslucent);
 			coreShaderMap.put(CoreShaders.RENDERTYPE_ENTITY_TRANSLUCENT_EMISSIVE, p -> ShaderKey.ENTITIES_EYES_TRANS);
 			coreShaderMap.put(CoreShaders.RENDERTYPE_ENTITY_ALPHA, p -> ShaderKey.ENTITIES_ALPHA);
+			coreShaderMap.put(CoreShaders.RENDERTYPE_ENTITY_DECAL, p -> ShaderKey.ENTITIES_CUTOUT_DIFFUSE);
 			coreShaderMap.put(CoreShaders.RENDERTYPE_ITEM_ENTITY_TRANSLUCENT_CULL, MixinShaderManager_Overrides::getTranslucent);
 			coreShaderMap.put(CoreShaders.RENDERTYPE_SOLID, p -> ShaderOverrides.isBlockEntities((IrisRenderingPipeline) p) ? ShaderKey.MOVING_BLOCK : 		ShaderKey.TERRAIN_SOLID);
 			coreShaderMap.put(CoreShaders.RENDERTYPE_CUTOUT, p -> ShaderOverrides.isBlockEntities((IrisRenderingPipeline) p) ? ShaderKey.MOVING_BLOCK : ShaderKey.TERRAIN_CUTOUT);
@@ -109,6 +110,7 @@ public abstract class MixinShaderManager_Overrides {
 			coreShaderMapShadow.put(CoreShaders.RENDERTYPE_ENTITY_SHADOW, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
 			coreShaderMapShadow.put(CoreShaders.RENDERTYPE_ENTITY_TRANSLUCENT, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
 			coreShaderMapShadow.put(CoreShaders.RENDERTYPE_ENTITY_TRANSLUCENT_EMISSIVE, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
+			coreShaderMapShadow.put(CoreShaders.RENDERTYPE_ENTITY_DECAL, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
 			coreShaderMapShadow.put(CoreShaders.RENDERTYPE_ENTITY_ALPHA, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
 			coreShaderMapShadow.put(CoreShaders.RENDERTYPE_ITEM_ENTITY_TRANSLUCENT_CULL, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
 			coreShaderMapShadow.put(CoreShaders.RENDERTYPE_SOLID, p -> ShaderKey.SHADOW_TERRAIN_CUTOUT);
