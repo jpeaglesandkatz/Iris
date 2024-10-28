@@ -85,7 +85,7 @@ public abstract class MixinShaderManager_Overrides {
 			coreShaderMap.put(CoreShaders.RENDERTYPE_END_PORTAL, MixinShaderManager_Overrides::getCutout);
 			coreShaderMap.put(CoreShaders.RENDERTYPE_END_GATEWAY, MixinShaderManager_Overrides::getCutout);
 			coreShaderMap.put(CoreShaders.RENDERTYPE_LEASH, p -> ShaderKey.LEASH);
-			coreShaderMap.put(CoreShaders.RENDERTYPE_WATER_MASK, p -> ShaderKey.ENTITIES_CUTOUT);
+			coreShaderMap.put(CoreShaders.RENDERTYPE_WATER_MASK, p -> ShaderKey.ENTITIES_SOLID);
 			coreShaderMap.put(CoreShaders.RENDERTYPE_CLOUDS, p -> ShaderKey.CLOUDS);
 			coreShaderMap.put(CoreShaders.RENDERTYPE_CRUMBLING, p -> ShaderKey.CRUMBLING);
 			coreShaderMap.put(CloudRenderer.CLOUDS, p -> ShaderKey.CLOUDS_SODIUM);
