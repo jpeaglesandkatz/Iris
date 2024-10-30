@@ -2,6 +2,7 @@ package net.irisshaders.iris.shaderpack;
 
 import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.stream.JsonReader;
@@ -57,6 +58,7 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -90,10 +92,15 @@ public class ShaderPack {
 	private final ShaderProperties shaderProperties;
 	private final List<String> dimensionIds;
 	private final Int2ObjectArrayMap<BuiltShaderStorageInfo> bufferObjects;
+	private final RTUniformHolder container;
 	private Map<NamespacedId, String> dimensionMap;
 
-	public ShaderPack(Path root, ImmutableList<StringPair> environmentDefines, boolean isZip) throws IOException, IllegalStateException {
-		this(root, Collections.emptyMap(), environmentDefines, isZip);
+	public ShaderPack(Path root, Path shaderPackConfigFile, ImmutableList<StringPair> environmentDefines, boolean isZip) throws IOException, IllegalStateException {
+		this(root, shaderPackConfigFile, Collections.emptyMap(), environmentDefines, isZip);
+	}
+
+	public RTUniformHolder getShaderUniformList() {
+		return container;
 	}
 
 	/**
@@ -104,7 +111,7 @@ public class ShaderPack {
 	 *             have completed, and there is no need to hold on to the path for that reason.
 	 * @throws IOException if there are any IO errors during shader pack loading.
 	 */
-	public ShaderPack(Path root, Map<String, String> changedConfigs, ImmutableList<StringPair> environmentDefines, boolean isZip) throws IOException, IllegalStateException {
+	public ShaderPack(Path root, Path shaderPackConfigFile, Map<String, String> changedConfigs, ImmutableList<StringPair> environmentDefines, boolean isZip) throws IOException, IllegalStateException {
 		// A null path is not allowed.
 		Objects.requireNonNull(root);
 
@@ -121,6 +128,27 @@ public class ShaderPack {
 		bufferObjects = new Int2ObjectArrayMap<>();
 
 		final boolean[] hasDimensionIds = {false}; // Thanks Java
+
+		Gson gson = new GsonBuilder()
+			.registerTypeAdapter(UniformContainer.Uniform.class, new UniformContainer.UniformTypeAdapter())
+			.create();
+
+		UniformContainer container = gson.fromJson(Files.readString(root.resolve("uniforms.json"), StandardCharsets.UTF_8), UniformContainer.class);
+		Set<String> optionsToIgnore = new HashSet<>();
+
+
+		for (UniformContainer.Uniform<?> uniform : container.uniforms) {
+			System.out.println("Name: " + uniform.uniformName);
+			System.out.println("Type: " + uniform.type);
+			System.out.println("Values: " + Arrays.toString(uniform.values));
+			System.out.println("Default: " + uniform.defaultValue);
+
+			optionsToIgnore.add(uniform.settingName);
+		}
+
+
+
+		this.container = new RTUniformHolder(this, shaderPackConfigFile, changedConfigs, container.uniforms);
 
 		// This cannot be done in IDMap, as we do not have the include graph, and subsequently the shader settings.
 		List<String> dimensionIdCreator = loadProperties(root, "dimension.properties", environmentDefines).map(dimensionProperties -> {

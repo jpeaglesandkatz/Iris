@@ -306,7 +306,9 @@ public class Iris {
 			return false;
 		}
 
-		Map<String, String> changedConfigs = tryReadConfigProperties(shaderPackConfigTxt)
+		Optional<Properties> configProperties = tryReadConfigProperties(shaderPackConfigTxt);
+
+		Map<String, String> changedConfigs = configProperties
 			.map(properties -> (Map<String, String>) (Object) properties)
 			.orElse(new HashMap<>());
 
@@ -319,7 +321,7 @@ public class Iris {
 		resetShaderPackOptions = false;
 
 		try {
-			currentPack = new ShaderPack(shaderPackPath, changedConfigs, StandardMacros.createStandardEnvironmentDefines(), isZip);
+			currentPack = new ShaderPack(shaderPackPath, shaderPackConfigTxt, changedConfigs, StandardMacros.createStandardEnvironmentDefines(), isZip);
 
 			MutableOptionValues changedConfigsValues = currentPack.getShaderPackOptions().getOptionValues().mutableCopy();
 
@@ -327,6 +329,7 @@ public class Iris {
 			Properties configsToSave = new Properties();
 			changedConfigsValues.getBooleanValues().forEach((k, v) -> configsToSave.setProperty(k, Boolean.toString(v)));
 			changedConfigsValues.getStringValues().forEach(configsToSave::setProperty);
+			currentPack.getShaderUniformList().forAllUniforms(configsToSave::setProperty);
 
 			tryUpdateConfigPropertiesFile(shaderPackConfigTxt, configsToSave);
 		} catch (Exception e) {

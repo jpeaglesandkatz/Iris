@@ -1,0 +1,18 @@
+{
+  "uniforms": [
+    {
+      "name": "testUniform",
+      "type": "float",
+      "values": [1.0, 2.0, 3.0]
+    },
+    {
+      "name": "testUniformInt",
+      "type": "int",
+      "values": [1, 2, 3]
+    },
+    {
+      "name": "testUniformBool",
+      "type": "bool"
+    }
+  ]
+}
