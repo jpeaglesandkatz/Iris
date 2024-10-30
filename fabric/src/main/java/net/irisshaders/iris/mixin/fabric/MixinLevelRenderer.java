@@ -17,6 +17,7 @@ import net.minecraft.client.renderer.FogParameters;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderBuffers;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.util.profiling.Profiler;
@@ -45,7 +46,7 @@ public abstract class MixinLevelRenderer {
 	private RenderBuffers renderBuffers;
 
 	@Inject(method = "renderLevel", at = @At("HEAD"))
-	private void iris$resetParticleManagerPhase(GraphicsResourceAllocator graphicsResourceAllocator, DeltaTracker deltaTracker, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
+	private void iris$resetParticleManagerPhase(GraphicsResourceAllocator graphicsResourceAllocator, DeltaTracker deltaTracker, boolean bl, Camera camera, GameRenderer gameRenderer, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
 		((PhasedParticleEngine) minecraft.particleEngine).setParticleRenderingPhase(ParticleRenderingPhase.EVERYTHING);
 	}
 
@@ -58,22 +59,22 @@ public abstract class MixinLevelRenderer {
 		float f = deltaTracker.getGameTimeDeltaPartialTick(false);
 
 		if (settings == ParticleRenderingSettings.BEFORE) {
-			minecraft.particleEngine.render(Minecraft.getInstance().gameRenderer.lightTexture(), camera, f);
+			minecraft.particleEngine.render(camera, f, this.renderBuffers.bufferSource());
 		} else if (settings == ParticleRenderingSettings.MIXED) {
 			((PhasedParticleEngine) minecraft.particleEngine).setParticleRenderingPhase(ParticleRenderingPhase.OPAQUE);
-			minecraft.particleEngine.render(Minecraft.getInstance().gameRenderer.lightTexture(), camera, f);
+			minecraft.particleEngine.render(camera, f, this.renderBuffers.bufferSource());
 		}
 	}
 
-	@Redirect(method = "method_62213", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/particle/ParticleEngine;render(Lnet/minecraft/client/renderer/LightTexture;Lnet/minecraft/client/Camera;F)V"))
-	private void iris$renderTranslucentAfterDeferred(ParticleEngine instance, LightTexture lightTexture, Camera camera, float f) {
+	@Redirect(method = "method_62213", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/particle/ParticleEngine;render(Lnet/minecraft/client/Camera;FLnet/minecraft/client/renderer/MultiBufferSource$BufferSource;)V"))
+	private void iris$renderTranslucentAfterDeferred(ParticleEngine instance, Camera camera, float f, MultiBufferSource.BufferSource bufferSource) {
 		ParticleRenderingSettings settings = getRenderingSettings();
 
 		if (settings == ParticleRenderingSettings.AFTER) {
-			minecraft.particleEngine.render(lightTexture, camera, f);
+			minecraft.particleEngine.render(camera, f, bufferSource);
 		} else if (settings == ParticleRenderingSettings.MIXED) {
 			((PhasedParticleEngine) minecraft.particleEngine).setParticleRenderingPhase(ParticleRenderingPhase.TRANSLUCENT);
-			minecraft.particleEngine.render(lightTexture, camera, f);
+			minecraft.particleEngine.render(camera, f, bufferSource);
 		}
 	}
 

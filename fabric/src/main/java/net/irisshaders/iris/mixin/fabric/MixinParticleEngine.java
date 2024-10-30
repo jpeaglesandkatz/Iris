@@ -2,6 +2,8 @@ package net.irisshaders.iris.mixin.fabric;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.irisshaders.batchedentityrendering.impl.BlendingStateHolder;
+import net.irisshaders.batchedentityrendering.impl.TransparencyType;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.fantastic.ParticleRenderingPhase;
 import net.irisshaders.iris.fantastic.PhasedParticleEngine;
@@ -11,6 +13,7 @@ import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleEngine;
 import net.minecraft.client.particle.ParticleRenderType;
 import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.renderer.MultiBufferSource;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -22,6 +25,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
 import java.util.function.Supplier;
 
 /**
@@ -64,14 +68,20 @@ public class MixinParticleEngine implements PhasedParticleEngine {
 		);
 	}
 
+	// todo 1.21.4: static bad
 	@Unique
-	private ParticleRenderingPhase phase = ParticleRenderingPhase.EVERYTHING;
+	private static ParticleRenderingPhase phase = ParticleRenderingPhase.EVERYTHING;
 
-	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/particle/ParticleRenderType;begin(Lcom/mojang/blaze3d/vertex/Tesselator;Lnet/minecraft/client/renderer/texture/TextureManager;)Lcom/mojang/blaze3d/vertex/BufferBuilder;"))
-	private void iris$changeParticleShader(LightTexture lightTexture, Camera camera, float f, CallbackInfo ci) {
+	@Inject(method = "renderParticleType", at = @At("HEAD"))
+	private static void iris$changeParticleShader(Camera camera, float f, MultiBufferSource.BufferSource bufferSource, ParticleRenderType particleRenderType, Queue<Particle> queue, CallbackInfo ci) {
 		if (IrisApi.getInstance().isShaderPackInUse() && phase == ParticleRenderingPhase.TRANSLUCENT) {
 			RenderSystem.setShader(ShaderAccess.getParticleTranslucentShader());
 		}
+	}
+
+	@Inject(method = "render", at = @At(value = "FIELD", target = "Lnet/minecraft/client/particle/ParticleRenderType;CUSTOM:Lnet/minecraft/client/particle/ParticleRenderType;"), cancellable = true)
+	private void skipCustom(Camera camera, float f, MultiBufferSource.BufferSource bufferSource, CallbackInfo ci) {
+		if (phase == ParticleRenderingPhase.OPAQUE) ci.cancel();
 	}
 
 	@Redirect(method = "render", at = @At(value = "FIELD", target = "Lnet/minecraft/client/particle/ParticleEngine;RENDER_ORDER:Ljava/util/List;"))
