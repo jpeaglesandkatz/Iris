@@ -975,6 +975,8 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			}
 		}
 
+		beginRenderer.renderAll();
+
 		isBeforeTranslucent = true;
 	}
 
