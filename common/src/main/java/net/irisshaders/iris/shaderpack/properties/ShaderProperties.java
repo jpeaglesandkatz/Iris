@@ -250,7 +250,7 @@ public class ShaderProperties {
 				viewportScaleOverrides.put(pass, new ViewportData(scale, offsetX, offsetY));
 			});
 
-			if ("weather.enabled".equals(key)) {
+			if ("weather".equals(key)) {
 				String[] parts = value.split(" ");
 
 				weather = parts[0].equals("true") ? OptionalBoolean.TRUE : OptionalBoolean.FALSE;
