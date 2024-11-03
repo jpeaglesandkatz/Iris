@@ -167,6 +167,16 @@ public class VanillaRenderingPipeline implements WorldRenderingPipeline {
 	}
 
 	@Override
+	public boolean shouldRenderWeather() {
+		return true;
+	}
+
+	@Override
+	public boolean shouldRenderWeatherParticles() {
+		return true;
+	}
+
+	@Override
 	public boolean shouldRenderMoon() {
 		return true;
 	}

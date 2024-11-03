@@ -69,6 +69,10 @@ public interface WorldRenderingPipeline {
 
 	boolean shouldRenderSun();
 
+	boolean shouldRenderWeather();
+
+	boolean shouldRenderWeatherParticles();
+
 	boolean shouldRenderMoon();
 
 	boolean shouldRenderStars();

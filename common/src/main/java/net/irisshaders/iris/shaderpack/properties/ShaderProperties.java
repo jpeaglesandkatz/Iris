@@ -77,6 +77,8 @@ public class ShaderProperties {
 	private int customTexAmount;
 	private CloudSetting cloudSetting = CloudSetting.DEFAULT;
 	private CloudSetting dhCloudSetting = CloudSetting.DEFAULT;
+	private OptionalBoolean weather = OptionalBoolean.DEFAULT;
+	private OptionalBoolean weatherParticles = OptionalBoolean.DEFAULT;
 	private OptionalBoolean oldHandLight = OptionalBoolean.DEFAULT;
 	private OptionalBoolean dynamicHandLight = OptionalBoolean.DEFAULT;
 	private OptionalBoolean supportsColorCorrection = OptionalBoolean.DEFAULT;
@@ -247,6 +249,16 @@ public class ShaderProperties {
 
 				viewportScaleOverrides.put(pass, new ViewportData(scale, offsetX, offsetY));
 			});
+
+			if ("weather.enabled".equals(key)) {
+				String[] parts = value.split(" ");
+
+				weather = parts[0].equals("true") ? OptionalBoolean.TRUE : OptionalBoolean.FALSE;
+
+				if (parts.length > 1) {
+					weatherParticles = parts[1].equals("true") ? OptionalBoolean.TRUE : OptionalBoolean.FALSE;
+				}
+			}
 
 			handlePassDirective("size.buffer.", key, value, pass -> {
 				String[] parts = value.split(" ");
@@ -773,6 +785,14 @@ public class ShaderProperties {
 
 	public OptionalBoolean getSun() {
 		return sun;
+	}
+
+	public OptionalBoolean getWeather() {
+		return weather;
+	}
+
+	public OptionalBoolean getWeatherParticles() {
+		return weatherParticles;
 	}
 
 	public OptionalBoolean getMoon() {

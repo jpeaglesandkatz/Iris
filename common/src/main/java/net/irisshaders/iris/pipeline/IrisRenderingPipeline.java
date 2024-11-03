@@ -154,6 +154,8 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	private final boolean occlusionCulling;
 	private final CloudSetting cloudSetting;
 	private final boolean shouldRenderSun;
+	private final boolean shouldRenderWeather;
+	private final boolean shouldRenderWeatherParticles;
 	private final boolean shouldRenderMoon;
 	private final boolean shouldRenderStars;
 	private final boolean shouldRenderSkyDisc;
@@ -205,6 +207,8 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		this.cloudSetting = programSet.getPackDirectives().getCloudSetting();
 		this.dhCloudSetting = programSet.getPackDirectives().getDHCloudSetting();
 		this.shouldRenderSun = programSet.getPackDirectives().shouldRenderSun();
+		this.shouldRenderWeather = programSet.getPackDirectives().shouldRenderWeather();
+		this.shouldRenderWeatherParticles = programSet.getPackDirectives().shouldRenderWeatherParticles();
 		this.shouldRenderMoon = programSet.getPackDirectives().shouldRenderMoon();
 		this.shouldRenderStars = programSet.getPackDirectives().shouldRenderStars();
 		this.shouldRenderSkyDisc = programSet.getPackDirectives().shouldRenderSkyDisc();
@@ -1071,6 +1075,16 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	@Override
 	public boolean shouldRenderSun() {
 		return shouldRenderSun;
+	}
+
+	@Override
+	public boolean shouldRenderWeather() {
+		return shouldRenderWeather;
+	}
+
+	@Override
+	public boolean shouldRenderWeatherParticles() {
+		return shouldRenderWeatherParticles;
 	}
 
 	@Override

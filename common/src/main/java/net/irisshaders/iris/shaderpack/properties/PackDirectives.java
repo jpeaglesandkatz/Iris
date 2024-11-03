@@ -31,6 +31,8 @@ public class PackDirectives {
 	private boolean underwaterOverlay;
 	private boolean vignette;
 	private boolean sun;
+	private boolean weather;
+	private boolean weatherParticles;
 	private boolean moon;
 	private boolean stars;
 	private boolean sky;
@@ -70,6 +72,8 @@ public class PackDirectives {
 		underwaterOverlay = properties.getUnderwaterOverlay().orElse(false);
 		vignette = properties.getVignette().orElse(false);
 		sun = properties.getSun().orElse(true);
+		weather = properties.getWeather().orElse(true);
+		weatherParticles = properties.getWeatherParticles().orElse(true);
 		moon = properties.getMoon().orElse(true);
 		stars = properties.getStars().orElse(true);
 		sky = properties.getSky().orElse(true);
@@ -158,6 +162,14 @@ public class PackDirectives {
 
 	public boolean shouldRenderSun() {
 		return sun;
+	}
+
+	public boolean shouldRenderWeather() {
+		return weather;
+	}
+
+	public boolean shouldRenderWeatherParticles() {
+		return weatherParticles;
 	}
 
 	public boolean shouldRenderMoon() {
