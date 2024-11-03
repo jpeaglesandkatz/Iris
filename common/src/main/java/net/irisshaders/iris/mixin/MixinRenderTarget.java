@@ -36,7 +36,7 @@ public class MixinRenderTarget implements Blaze3dRenderTargetExt {
 	}
 
 	@Inject(method = "createBuffers", at = @At(value = "RETURN"))
-	private void nameDepthBuffer(int i, int j, boolean bl, CallbackInfo ci) {
+	private void nameDepthBuffer(int i, int j, CallbackInfo ci) {
 		GLDebug.nameObject(GL43C.GL_TEXTURE, this.depthBufferId, "Main depth texture");
 		GLDebug.nameObject(GL43C.GL_TEXTURE, this.colorTextureId, "Main color texture");
 		GLDebug.nameObject(GL43C.GL_FRAMEBUFFER, this.frameBufferId, "Main framebuffer");
