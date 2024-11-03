@@ -113,7 +113,7 @@ public class CompositeRenderer {
 			if (source == null || !source.isValid()) {
 				if (computes.length != 0 && computes[i] != null && computes[i].length > 0) {
 					ComputeOnlyPass pass = new ComputeOnlyPass();
-					pass.name = computes[i].length > 0 ? computes[i][0].getName() : "unknown";
+					pass.name = computes[i].length > 0 ? Arrays.stream(computes[i]).filter(Objects::nonNull).findFirst().map(ComputeSource::getName).orElse("unknown") : "unknown";
 					pass.computes = createComputes(computes[i], flipped, flippedAtLeastOnceSnapshot, shadowTargetsSupplier, holder);
 					passes.add(pass);
 				}
