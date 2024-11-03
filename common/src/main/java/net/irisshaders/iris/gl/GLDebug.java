@@ -6,6 +6,7 @@
 package net.irisshaders.iris.gl;
 
 import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.platform.IrisPlatformHelpers;
 import org.lwjgl.opengl.AMDDebugOutput;
 import org.lwjgl.opengl.ARBDebugOutput;
 import org.lwjgl.opengl.GL;
@@ -19,6 +20,7 @@ import org.lwjgl.opengl.KHRDebug;
 import org.lwjgl.system.APIUtil;
 
 import java.io.PrintStream;
+import java.util.Stack;
 import java.util.function.Consumer;
 
 public final class GLDebug {
@@ -313,11 +315,11 @@ public final class GLDebug {
 	}
 
 	public static void pushGroup(int id, String name) {
-		//debugState.pushGroup(id, name);
+		debugState.pushGroup(id, name);
 	}
 
 	public static void popGroup() {
-		//debugState.popGroup();
+		debugState.popGroup();
 	}
 
 	private interface DebugState {
@@ -329,7 +331,10 @@ public final class GLDebug {
 	}
 
 	private static class KHRDebugState implements DebugState {
+		// Let's see how bad this goes
+		private static final boolean ENABLE_DEBUG_GROUPS = true;
 		private int stackSize;
+		private final Stack<String> stack = new Stack<>();
 
 		@Override
 		public void nameObject(int id, int object, String name) {
@@ -338,15 +343,21 @@ public final class GLDebug {
 
 		@Override
 		public void pushGroup(int id, String name) {
-			KHRDebug.glPushDebugGroup(KHRDebug.GL_DEBUG_SOURCE_APPLICATION, id, name);
-			stackSize += 1;
+			if (ENABLE_DEBUG_GROUPS) {
+				KHRDebug.glPushDebugGroup(KHRDebug.GL_DEBUG_SOURCE_APPLICATION, id, name);
+				stack.push(name);
+				stackSize += 1;
+			}
 		}
 
 		@Override
 		public void popGroup() {
-			if (stackSize != 0) {
-				KHRDebug.glPopDebugGroup();
-				stackSize -= 1;
+			if (ENABLE_DEBUG_GROUPS) {
+				if (stackSize != 0) {
+					KHRDebug.glPopDebugGroup();
+					stack.pop();
+					stackSize -= 1;
+				}
 			}
 		}
 	}

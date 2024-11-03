@@ -23,10 +23,12 @@ public class RenderTarget {
 	private int width;
 	private int height;
 	private boolean isValid;
+	private String name;
 
 	public RenderTarget(Builder builder) {
 		this.isValid = true;
 
+		this.name = builder.name;
 		this.internalFormat = builder.internalFormat;
 		this.format = builder.format;
 		this.type = builder.type;
@@ -41,13 +43,8 @@ public class RenderTarget {
 		this.altTexture = textures[1];
 
 		boolean isPixelFormatInteger = builder.internalFormat.getPixelFormat().isInteger();
-		setupTexture(mainTexture, builder.width, builder.height, !isPixelFormatInteger);
-		setupTexture(altTexture, builder.width, builder.height, !isPixelFormatInteger);
-
-		if (builder.name != null) {
-			GLDebug.nameObject(GL43C.GL_TEXTURE, mainTexture, builder.name + " main");
-			GLDebug.nameObject(GL43C.GL_TEXTURE, mainTexture, builder.name + " alt");
-		}
+		setupTexture(mainTexture, builder.width, builder.height, !isPixelFormatInteger, false);
+		setupTexture(altTexture, builder.width, builder.height, !isPixelFormatInteger, true);
 
 		// Clean up after ourselves
 		// This is strictly defensive to ensure that other buggy code doesn't tamper with our textures
@@ -58,8 +55,8 @@ public class RenderTarget {
 		return new Builder();
 	}
 
-	private void setupTexture(int texture, int width, int height, boolean allowsLinear) {
-		resizeTexture(texture, width, height);
+	private void setupTexture(int texture, int width, int height, boolean allowsLinear, boolean alt) {
+		resizeTexture(texture, width, height, alt);
 
 		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MIN_FILTER, allowsLinear ? GL11C.GL_LINEAR : GL11C.GL_NEAREST);
 		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MAG_FILTER, allowsLinear ? GL11C.GL_LINEAR : GL11C.GL_NEAREST);
@@ -67,8 +64,12 @@ public class RenderTarget {
 		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_T, GL13C.GL_CLAMP_TO_EDGE);
 	}
 
-	private void resizeTexture(int texture, int width, int height) {
+	private void resizeTexture(int texture, int width, int height, boolean alt) {
 		IrisRenderSystem.texImage2D(texture, GL11C.GL_TEXTURE_2D, 0, internalFormat.getGlFormat(), width, height, 0, format.getGlFormat(), type.getGlFormat(), NULL_BUFFER);
+
+		if (name != null) {
+			GLDebug.nameObject(GL43C.GL_TEXTURE, texture, name + " " + (alt ? "alt" : "main"));
+		}
 	}
 
 	void resize(Vector2i textureScaleOverride) {
@@ -82,9 +83,9 @@ public class RenderTarget {
 		this.width = width;
 		this.height = height;
 
-		resizeTexture(mainTexture, width, height);
+		resizeTexture(mainTexture, width, height, false);
 
-		resizeTexture(altTexture, width, height);
+		resizeTexture(altTexture, width, height, true);
 	}
 
 	public InternalTextureFormat getInternalFormat() {

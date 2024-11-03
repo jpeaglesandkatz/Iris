@@ -91,7 +91,7 @@ public class ShadowCompositeRenderer {
 			ImmutableSet<Integer> flippedAtLeastOnceSnapshot = flippedAtLeastOnce.build();
 
 			if (source == null || !source.isValid()) {
-				if (computes[i] != null) {
+				if (computes.length > 0 && computes[i] != null) {
 					ComputeOnlyPass pass = new ComputeOnlyPass();
 					pass.computes = createComputes(computes[i], flipped, flippedAtLeastOnceSnapshot, renderTargets, holder);
 					passes.add(pass);
@@ -103,7 +103,11 @@ public class ShadowCompositeRenderer {
 			ProgramDirectives directives = source.getDirectives();
 
 			pass.program = createProgram(source, flipped, flippedAtLeastOnceSnapshot, renderTargets);
-			pass.computes = createComputes(computes[i], flipped, flippedAtLeastOnceSnapshot, renderTargets, holder);
+			if (computes.length > 0) {
+				pass.computes = createComputes(computes[i], flipped, flippedAtLeastOnceSnapshot, renderTargets, holder);
+			} else {
+				pass.computes = new ComputeProgram[0];
+			}
 			int[] drawBuffers = source.getDirectives().hasUnknownDrawBuffers() ? new int[]{0, 1} : source.getDirectives().getDrawBuffers();
 
 			GlFramebuffer framebuffer = renderTargets.createColorFramebuffer(flipped, drawBuffers);

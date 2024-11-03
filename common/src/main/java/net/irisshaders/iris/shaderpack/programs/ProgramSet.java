@@ -19,6 +19,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -65,10 +66,14 @@ public class ProgramSet implements ProgramSetInterface {
 				ProgramSource[] sources = readProgramArray(directory, sourceProvider, id.getSourcePrefix(), shaderProperties, readTesselation);
 				compositePrograms.put(id, sources);
 				ComputeSource[][] computes = new ComputeSource[id.getNumPrograms()][];
+				boolean hasNoComputes = true;
 				for (int i = 0; i < id.getNumPrograms(); i++) {
 					computes[i] = readComputeArray(directory, sourceProvider, id.getSourcePrefix() + (i == 0 ? "" : i), shaderProperties);
+					if (computes[i].length > 0) {
+						hasNoComputes = false;
+					}
 				}
-				computePrograms.put(id, computes);
+				computePrograms.put(id, hasNoComputes ? new ComputeSource[0][] : computes);
 			}
 
 			Future[] sources = new Future[ProgramId.values().length];
@@ -198,6 +203,10 @@ public class ProgramSet implements ProgramSetInterface {
 			}
 		}
 
+		if (Arrays.stream(programs).allMatch(Objects::isNull)) {
+			return new ComputeSource[0];
+		}
+
 		return programs;
 	}
 
@@ -297,6 +306,6 @@ public class ProgramSet implements ProgramSetInterface {
 	}
 
 	public ComputeSource[][] getCompute(ProgramArrayId programArrayId) {
-		return computePrograms.getOrDefault(programArrayId, new ComputeSource[programArrayId.getNumPrograms()][27]);
+		return computePrograms.getOrDefault(programArrayId, new ComputeSource[0][0]);
 	}
 }

@@ -7,6 +7,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.irisshaders.iris.features.FeatureFlags;
+import net.irisshaders.iris.gl.GLDebug;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.blending.BlendModeOverride;
 import net.irisshaders.iris.gl.buffer.ShaderStorageBufferHolder;
@@ -51,6 +52,7 @@ import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL43C;
 
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -69,14 +71,16 @@ public class CompositeRenderer {
 	private final Set<GlImage> customImages;
 	private final TextureStage textureStage;
 	private final WorldRenderingPipeline pipeline;
+	private final CompositePass compositePass;
 
-	public CompositeRenderer(WorldRenderingPipeline pipeline, PackDirectives packDirectives, ProgramSource[] sources, ComputeSource[][] computes, RenderTargets renderTargets, ShaderStorageBufferHolder holder,
+	public CompositeRenderer(WorldRenderingPipeline pipeline, CompositePass compositePass, PackDirectives packDirectives, ProgramSource[] sources, ComputeSource[][] computes, RenderTargets renderTargets, ShaderStorageBufferHolder holder,
 							 TextureAccess noiseTexture, FrameUpdateNotifier updateNotifier,
 							 CenterDepthSampler centerDepthSampler, BufferFlipper bufferFlipper,
 							 Supplier<ShadowRenderTargets> shadowTargetsSupplier, TextureStage textureStage,
 							 Object2ObjectMap<String, TextureAccess> customTextureIds, Object2ObjectMap<String, TextureAccess> irisCustomTextures, Set<GlImage> customImages, ImmutableMap<Integer, Boolean> explicitPreFlips,
 							 CustomUniforms customUniforms) {
 		this.pipeline = pipeline;
+		this.compositePass = compositePass;
 		this.noiseTexture = noiseTexture;
 		this.centerDepthSampler = centerDepthSampler;
 		this.renderTargets = renderTargets;
@@ -107,8 +111,9 @@ public class CompositeRenderer {
 			ImmutableSet<Integer> flippedAtLeastOnceSnapshot = flippedAtLeastOnce.build();
 
 			if (source == null || !source.isValid()) {
-				if (computes[i] != null) {
+				if (computes.length != 0 && computes[i] != null && computes[i].length > 0) {
 					ComputeOnlyPass pass = new ComputeOnlyPass();
+					pass.name = computes[i].length > 0 ? computes[i][0].getName() : "unknown";
 					pass.computes = createComputes(computes[i], flipped, flippedAtLeastOnceSnapshot, shadowTargetsSupplier, holder);
 					passes.add(pass);
 				}
@@ -118,9 +123,14 @@ public class CompositeRenderer {
 			Pass pass = new Pass();
 			ProgramDirectives directives = source.getDirectives();
 
+			pass.name = source.getName();
 			pass.program = createProgram(source, flipped, flippedAtLeastOnceSnapshot, shadowTargetsSupplier);
 			pass.blendModeOverride = source.getDirectives().getBlendModeOverride().orElse(null);
-			pass.computes = createComputes(computes[i], flipped, flippedAtLeastOnceSnapshot, shadowTargetsSupplier, holder);
+			if (computes.length != 0) {
+				pass.computes = createComputes(computes[i], flipped, flippedAtLeastOnceSnapshot, shadowTargetsSupplier, holder);
+			} else {
+				pass.computes = new ComputeProgram[0];
+			}
 			int[] drawBuffers = directives.getDrawBuffers();
 
 
@@ -170,6 +180,23 @@ public class CompositeRenderer {
 		this.flippedAtLeastOnceFinal = flippedAtLeastOnce.build();
 
 		GlStateManager._glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, 0);
+	}
+
+	private boolean hasComputes(ComputeSource[][] computes) {
+		boolean hasCompute = false;
+
+		for (int i = 0; i < computes.length; i++) {
+			if (computes[i].length > 0) {
+				for (int j = 0; j < computes[i].length; j++) {
+					if (computes[i][j] != null) {
+						hasCompute = true;
+						break;
+					}
+				}
+			}
+		}
+
+		return hasCompute;
 	}
 
 	private static void setupMipmapping(net.irisshaders.iris.targets.RenderTarget target, boolean readFromAlt) {
@@ -224,12 +251,15 @@ public class CompositeRenderer {
 	}
 
 	public void renderAll() {
+		GLDebug.pushGroup(20 + compositePass.ordinal(), compositePass.name().toLowerCase(Locale.ROOT));
 		RenderSystem.disableBlend();
 
 		FullScreenQuadRenderer.INSTANCE.begin();
 		com.mojang.blaze3d.pipeline.RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
 
-		for (Pass renderPass : passes) {
+		for (int i = 0, passesSize = passes.size(); i < passesSize; i++) {
+			Pass renderPass = passes.get(i);
+			GLDebug.pushGroup(20 * compositePass.ordinal() + i, renderPass.name);
 			boolean ranCompute = false;
 			for (ComputeProgram computeProgram : renderPass.computes) {
 				if (computeProgram != null) {
@@ -247,6 +277,7 @@ public class CompositeRenderer {
 			Program.unbind();
 
 			if (renderPass instanceof ComputeOnlyPass) {
+				GLDebug.popGroup();
 				continue;
 			}
 
@@ -278,6 +309,7 @@ public class CompositeRenderer {
 			FullScreenQuadRenderer.INSTANCE.renderQuad();
 
 			BlendModeOverride.restore();
+			GLDebug.popGroup();
 		}
 
 		FullScreenQuadRenderer.INSTANCE.end();
@@ -300,6 +332,8 @@ public class CompositeRenderer {
 		}
 
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
+
+		GLDebug.popGroup();
 	}
 
 	// TODO: Don't just copy this from DeferredWorldRenderingPipeline
@@ -432,6 +466,7 @@ public class CompositeRenderer {
 		int[] drawBuffers;
 		int viewWidth;
 		int viewHeight;
+		String name;
 		Program program;
 		BlendModeOverride blendModeOverride;
 		ComputeProgram[] computes;

@@ -11,9 +11,11 @@ import net.irisshaders.batchedentityrendering.impl.MemoryTrackingRenderBuffers;
 import net.irisshaders.batchedentityrendering.impl.RenderBuffersExt;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.compat.dh.DHCompat;
+import net.irisshaders.iris.gl.GLDebug;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gui.option.IrisVideoSettings;
 import net.irisshaders.iris.mixin.LevelRendererAccessor;
+import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
 import net.irisshaders.iris.shaderpack.programs.ProgramSource;
 import net.irisshaders.iris.shaderpack.properties.PackDirectives;
 import net.irisshaders.iris.shaderpack.properties.PackShadowDirectives;
@@ -87,6 +89,7 @@ public class ShadowRenderer {
 	private final String debugStringOverall;
 	private final boolean separateHardwareSamplers;
 	private final boolean shouldRenderLightBlockEntities;
+	private final IrisRenderingPipeline pipeline;
 	private boolean packHasVoxelization;
 	private FrustumHolder terrainFrustumHolder;
 	private FrustumHolder entityFrustumHolder;
@@ -94,9 +97,10 @@ public class ShadowRenderer {
 	private int renderedShadowEntities = 0;
 	private int renderedShadowBlockEntities = 0;
 
-	public ShadowRenderer(ProgramSource shadow, PackDirectives directives,
+	public ShadowRenderer(IrisRenderingPipeline pipeline, ProgramSource shadow, PackDirectives directives,
 						  ShadowRenderTargets shadowRenderTargets, ShadowCompositeRenderer compositeRenderer, CustomUniforms customUniforms, boolean separateHardwareSamplers) {
 
+		this.pipeline = pipeline;
 		this.separateHardwareSamplers = separateHardwareSamplers;
 
 		final PackShadowDirectives shadowDirectives = directives.getShadowDirectives();
@@ -152,7 +156,7 @@ public class ShadowRenderer {
 		configureSamplingSettings(shadowDirectives);
 	}
 
-	public static PoseStack createShadowModelView(float sunPathRotation, float intervalSize) {
+	public static PoseStack createShadowModelView(float sunPathRotation, float intervalSize, float nearPlane, float farPlane) {
 		// Determine the camera position
 		Vector3d cameraPos = CameraUniforms.getUnshiftedCameraPosition();
 
@@ -162,7 +166,7 @@ public class ShadowRenderer {
 
 		// Set up our modelview matrix stack
 		PoseStack modelView = new PoseStack();
-		ShadowMatrices.createModelViewMatrix(modelView, getShadowAngle(), intervalSize, sunPathRotation, cameraX, cameraY, cameraZ);
+		ShadowMatrices.createModelViewMatrix(modelView, getShadowAngle(), intervalSize, sunPathRotation, cameraX, cameraY, cameraZ, nearPlane, farPlane);
 
 		return modelView;
 	}
@@ -384,7 +388,7 @@ public class ShadowRenderer {
 		setupShadowViewport();
 
 		// Create our camera
-		PoseStack modelView = createShadowModelView(this.sunPathRotation, this.intervalSize);
+		PoseStack modelView = createShadowModelView(this.sunPathRotation, this.intervalSize, nearPlane, farPlane);
 		MODELVIEW = new Matrix4f(modelView.last().pose());
 
 		RenderSystem.getModelViewStack().pushMatrix();
@@ -396,7 +400,7 @@ public class ShadowRenderer {
 			// If FOV is not null, the pack wants a perspective based projection matrix. (This is to support legacy packs)
 			shadowProjection = ShadowMatrices.createPerspectiveMatrix(this.fov);
 		} else {
-			shadowProjection = ShadowMatrices.createOrthoMatrix(halfPlaneLength, nearPlane < 0 ? -DHCompat.getRenderDistance() : nearPlane, farPlane < 0 ? DHCompat.getRenderDistance() : farPlane);
+			shadowProjection = ShadowMatrices.createOrthoMatrix(halfPlaneLength, nearPlane < 0 ? -DHCompat.getRenderDistance() * 16 : nearPlane, farPlane < 0 ? DHCompat.getRenderDistance() * 16 : farPlane);
 		}
 
 		IrisRenderSystem.setShadowProjection(shadowProjection);
@@ -575,7 +579,11 @@ public class ShadowRenderer {
 			((CullingDataCache) levelRenderer).restoreState();
 		}
 
+		pipeline.removePhaseIfNeeded();
+
+		GLDebug.pushGroup(901, "shadowcomp");
 		compositeRenderer.renderAll();
+		GLDebug.popGroup();
 
 		levelRenderer.setRenderBuffers(playerBuffers);
 
@@ -707,6 +715,7 @@ public class ShadowRenderer {
 			messages.add("[" + Iris.MODNAME + "] Shadow Maps: " + debugStringOverall);
 			messages.add("[" + Iris.MODNAME + "] Shadow Distance Terrain: " + terrainFrustumHolder.getDistanceInfo() + " Entity: " + entityFrustumHolder.getDistanceInfo());
 			messages.add("[" + Iris.MODNAME + "] Shadow Culling Terrain: " + terrainFrustumHolder.getCullingInfo() + " Entity: " + entityFrustumHolder.getCullingInfo());
+			messages.add("[" + Iris.MODNAME + "] Shadow Projection: " + getProjectionInfo());
 			messages.add("[" + Iris.MODNAME + "] Shadow Terrain: " + debugStringTerrain
 				+ (shouldRenderTerrain ? "" : " (no terrain) ") + (shouldRenderTranslucent ? "" : "(no translucent)"));
 			messages.add("[" + Iris.MODNAME + "] Shadow Entities: " + getEntitiesDebugString());
@@ -720,6 +729,10 @@ public class ShadowRenderer {
 			messages.add("[" + Iris.MODNAME + "] E: " + renderedShadowEntities);
 			messages.add("[" + Iris.MODNAME + "] BE: " + renderedShadowBlockEntities);
 		}
+	}
+
+	private String getProjectionInfo() {
+		return "Near: " + nearPlane + " Far: " + farPlane + " distance " + halfPlaneLength;
 	}
 
 	private String getEntitiesDebugString() {

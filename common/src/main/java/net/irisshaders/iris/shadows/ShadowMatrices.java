@@ -5,22 +5,12 @@ import com.mojang.math.Axis;
 import org.joml.Matrix4f;
 
 public class ShadowMatrices {
-	private static final float NEAR = 0.05f;
-	private static final float FAR = 256.0f;
-
-	// NB: These matrices are in column-major order, not row-major order like what you'd expect!
+	public static final float NEAR = -100.05f;
+	public static final float FAR = 156.0f;
 
 	public static Matrix4f createOrthoMatrix(float halfPlaneLength, float nearPlane, float farPlane) {
-		return new Matrix4f(
-			// column 1
-			1.0f / halfPlaneLength, 0f, 0f, 0f,
-			// column 2
-			0f, 1.0f / halfPlaneLength, 0f, 0f,
-			// column 3
-			0f, 0f, 2.0f / (nearPlane - farPlane), 0f,
-			// column 4
-			0f, 0f, -(farPlane + nearPlane) / (farPlane - nearPlane), 1f
-		);
+		//System.out.println("making a matrix with " + nearPlane + " / " + farPlane + " * " + halfPlaneLength);
+		return new Matrix4f().setOrthoSymmetric(halfPlaneLength, halfPlaneLength, nearPlane, farPlane);
 	}
 
 	public static Matrix4f createPerspectiveMatrix(float fov) {
@@ -38,7 +28,7 @@ public class ShadowMatrices {
 		);
 	}
 
-	public static void createBaselineModelViewMatrix(PoseStack target, float shadowAngle, float sunPathRotation) {
+	public static void createBaselineModelViewMatrix(PoseStack target, float shadowAngle, float sunPathRotation, float nearPlane, float farPlane) {
 		float skyAngle;
 
 		if (shadowAngle < 0.25f) {
@@ -50,7 +40,6 @@ public class ShadowMatrices {
 		target.last().normal().identity();
 		target.last().pose().identity();
 
-		target.last().pose().translate(0.0f, 0.0f, -100.0f);
 		target.mulPose(Axis.XP.rotationDegrees(90.0F));
 		target.mulPose(Axis.ZP.rotationDegrees(skyAngle * -360.0f));
 		target.mulPose(Axis.XP.rotationDegrees(sunPathRotation));
@@ -88,8 +77,8 @@ public class ShadowMatrices {
 	}
 
 	public static void createModelViewMatrix(PoseStack target, float shadowAngle, float shadowIntervalSize,
-											 float sunPathRotation, double cameraX, double cameraY, double cameraZ) {
-		createBaselineModelViewMatrix(target, shadowAngle, sunPathRotation);
+											 float sunPathRotation, double cameraX, double cameraY, double cameraZ, float nearPlane, float farPlane) {
+		createBaselineModelViewMatrix(target, shadowAngle, sunPathRotation, nearPlane, farPlane);
 		snapModelViewToGrid(target, shadowIntervalSize, cameraX, cameraY, cameraZ);
 	}
 
@@ -155,7 +144,7 @@ public class ShadowMatrices {
 			// When DayTime=0, skyAngle = 282 degrees.
 			// Thus, sunAngle = shadowAngle = 0.03451777f
 			createModelViewMatrix(modelView, 0.03451777f, 2.0f,
-				0.0f, 0.646045982837677f, 82.53274536132812f, -514.0264282226562f);
+				0.0f, 0.646045982837677f, 82.53274536132812f, -514.0264282226562f, NEAR, FAR);
 
 			test("model view at dawn", expectedModelViewAtDawn, modelView.last().pose());
 		}

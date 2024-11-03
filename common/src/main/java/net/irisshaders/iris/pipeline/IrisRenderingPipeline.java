@@ -77,6 +77,7 @@ import net.irisshaders.iris.shaderpack.texture.TextureStage;
 import net.irisshaders.iris.shadows.ShadowCompositeRenderer;
 import net.irisshaders.iris.shadows.ShadowRenderTargets;
 import net.irisshaders.iris.shadows.ShadowRenderer;
+import net.irisshaders.iris.shadows.ShadowRenderingState;
 import net.irisshaders.iris.targets.Blaze3dRenderTargetExt;
 import net.irisshaders.iris.targets.BufferFlipper;
 import net.irisshaders.iris.targets.ClearPass;
@@ -303,28 +304,28 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 		this.shadowComputes = createShadowComputes(programSet.getShadowCompute(), programSet);
 
-		this.beginRenderer = new CompositeRenderer(this, programSet.getPackDirectives(), programSet.getComposite(ProgramArrayId.Begin), programSet.getCompute(ProgramArrayId.Begin), renderTargets, shaderStorageBufferHolder,
+		this.beginRenderer = new CompositeRenderer(this, CompositePass.BEGIN, programSet.getPackDirectives(), programSet.getComposite(ProgramArrayId.Begin), programSet.getCompute(ProgramArrayId.Begin), renderTargets, shaderStorageBufferHolder,
 			customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowTargetsSupplier, TextureStage.BEGIN,
 			customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.BEGIN, Object2ObjectMaps.emptyMap()), customTextureManager.getIrisCustomTextures(), customImages,
 			programSet.getPackDirectives().getExplicitFlips("begin_pre"), customUniforms);
 
 		flippedBeforeShadow = flipper.snapshot();
 
-		this.prepareRenderer = new CompositeRenderer(this, programSet.getPackDirectives(), programSet.getComposite(ProgramArrayId.Prepare), programSet.getCompute(ProgramArrayId.Prepare), renderTargets, shaderStorageBufferHolder,
+		this.prepareRenderer = new CompositeRenderer(this, CompositePass.PREPARE, programSet.getPackDirectives(), programSet.getComposite(ProgramArrayId.Prepare), programSet.getCompute(ProgramArrayId.Prepare), renderTargets, shaderStorageBufferHolder,
 			customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowTargetsSupplier, TextureStage.PREPARE,
 			customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.PREPARE, Object2ObjectMaps.emptyMap()), customTextureManager.getIrisCustomTextures(), customImages,
 			programSet.getPackDirectives().getExplicitFlips("prepare_pre"), customUniforms);
 
 		flippedAfterPrepare = flipper.snapshot();
 
-		this.deferredRenderer = new CompositeRenderer(this, programSet.getPackDirectives(), programSet.getComposite(ProgramArrayId.Deferred), programSet.getCompute(ProgramArrayId.Deferred), renderTargets, shaderStorageBufferHolder,
+		this.deferredRenderer = new CompositeRenderer(this, CompositePass.DEFERRED, programSet.getPackDirectives(), programSet.getComposite(ProgramArrayId.Deferred), programSet.getCompute(ProgramArrayId.Deferred), renderTargets, shaderStorageBufferHolder,
 			customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowTargetsSupplier, TextureStage.DEFERRED,
 			customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.DEFERRED, Object2ObjectMaps.emptyMap()), customTextureManager.getIrisCustomTextures(), customImages,
 			programSet.getPackDirectives().getExplicitFlips("deferred_pre"), customUniforms);
 
 		flippedAfterTranslucent = flipper.snapshot();
 
-		this.compositeRenderer = new CompositeRenderer(this, programSet.getPackDirectives(), programSet.getComposite(ProgramArrayId.Composite), programSet.getCompute(ProgramArrayId.Composite), renderTargets, shaderStorageBufferHolder,
+		this.compositeRenderer = new CompositeRenderer(this, CompositePass.COMPOSITE, programSet.getPackDirectives(), programSet.getComposite(ProgramArrayId.Composite), programSet.getCompute(ProgramArrayId.Composite), renderTargets, shaderStorageBufferHolder,
 			customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowTargetsSupplier, TextureStage.COMPOSITE_AND_FINAL,
 			customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.COMPOSITE_AND_FINAL, Object2ObjectMaps.emptyMap()), customTextureManager.getIrisCustomTextures(), customImages,
 			programSet.getPackDirectives().getExplicitFlips("composite_pre"), customUniforms);
@@ -433,7 +434,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 				customTextureManager.getCustomTextureIdMap(TextureStage.SHADOWCOMP), customImages, programSet.getPackDirectives().getExplicitFlips("shadowcomp_pre"), customTextureManager.getIrisCustomTextures(), customUniforms);
 
 			if (programSet.getPackDirectives().getShadowDirectives().isShadowEnabled().orElse(true)) {
-				this.shadowRenderer = new ShadowRenderer(resolver.resolveNullable(ProgramId.ShadowSolid),
+				this.shadowRenderer = new ShadowRenderer(this, resolver.resolveNullable(ProgramId.ShadowSolid),
 					programSet.getPackDirectives(), shadowRenderTargets, shadowCompositeRenderer, customUniforms, programSet.getPack().hasFeature(FeatureFlags.SEPARATE_HARDWARE_SAMPLERS));
 			} else {
 				shadowRenderer = null;
@@ -739,8 +740,16 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		}
 	}
 
+	private boolean shouldRemovePhase = false;
+
 	@Override
 	public WorldRenderingPhase getPhase() {
+		if (shouldRemovePhase) {
+			phase = WorldRenderingPhase.NONE;
+			shouldRemovePhase = false;
+			GLDebug.popGroup();
+		}
+
 		if (overridePhase != null) {
 			return overridePhase;
 		}
@@ -748,11 +757,35 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		return phase;
 	}
 
+	public void removePhaseIfNeeded() {
+		if (shouldRemovePhase) {
+			phase = WorldRenderingPhase.NONE;
+			shouldRemovePhase = false;
+			GLDebug.popGroup();
+		}
+	}
+
 	@Override
 	public void setPhase(WorldRenderingPhase phase) {
+		if (phase == WorldRenderingPhase.NONE) {
+			if (shouldRemovePhase) GLDebug.popGroup();
+			shouldRemovePhase = true;
+			return;
+		} else {
+			shouldRemovePhase = false;
+			if (phase == this.phase) {
+				return;
+			}
+		}
+
 		GLDebug.popGroup();
-		if (phase != WorldRenderingPhase.NONE)
-			GLDebug.pushGroup(phase.ordinal(), StringUtils.capitalize(phase.name().toLowerCase(Locale.ROOT).replace("_", " ")));
+		if (phase != WorldRenderingPhase.NONE && phase != WorldRenderingPhase.TERRAIN_CUTOUT && phase != WorldRenderingPhase.TERRAIN_CUTOUT_MIPPED && phase != WorldRenderingPhase.TRIPWIRE) {
+			if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+				GLDebug.pushGroup(phase.ordinal(), "Shadow " + StringUtils.capitalize(phase.name().toLowerCase(Locale.ROOT).replace("_", " ")));
+			} else {
+				GLDebug.pushGroup(phase.ordinal(), StringUtils.capitalize(phase.name().toLowerCase(Locale.ROOT).replace("_", " ")));
+			}
+		}
 		this.phase = phase;
 	}
 
@@ -806,6 +839,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 		Vector4f emptyClearColor = new Vector4f(1.0F);
 
+		GLDebug.pushGroup(100, "Clear textures");
 
 		for (GlImage image : clearImages) {
 			ARBClearTexture.glClearTexImage(image.getId(), 0, image.getFormat().getGlFormat(), image.getPixelType().getGlFormat(), (int[]) null);
@@ -911,6 +945,8 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			clearPass.execute(fogColor);
 		}
 
+		GLDebug.popGroup();
+
 		// Make sure to switch back to the main framebuffer. If we forget to do this then our alt buffers might be
 		// cleared to the fog color, which absolutely is not what we want!
 		//
@@ -978,6 +1014,8 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			throw new IllegalStateException("Tried to use a destroyed world rendering pipeline");
 		}
 
+		removePhaseIfNeeded();
+
 		isBeforeTranslucent = false;
 
 		// We need to copy the current depth texture so that depthtex1 can contain the depth values for
@@ -1004,6 +1042,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	@Override
 	public void finalizeLevelRendering() {
 		isRenderingWorld = false;
+		removePhaseIfNeeded();
 		compositeRenderer.renderAll();
 		finalPassRenderer.renderFinalPass();
 	}

@@ -21,10 +21,10 @@ public final class MatrixUniforms {
 		addMatrix(uniforms, "Projection", CapturedRenderingState.INSTANCE::getGbufferProjection);
 		addDHMatrix(uniforms, "Projection", DHCompat::getProjection);
 		addShadowMatrix(uniforms, "ModelView", () ->
-			new Matrix4f(ShadowRenderer.createShadowModelView(directives.getSunPathRotation(), directives.getShadowDirectives().getIntervalSize()).last().pose()));
+			new Matrix4f(ShadowRenderer.createShadowModelView(directives.getSunPathRotation(), directives.getShadowDirectives().getIntervalSize(), directives.getShadowDirectives().getNearPlane(), directives.getShadowDirectives().getFarPlane()).last().pose()));
 		addShadowMatrix(uniforms, "Projection", () -> ShadowMatrices.createOrthoMatrix(directives.getShadowDirectives().getDistance(),
-			directives.getShadowDirectives().getNearPlane() < 0 ? -DHCompat.getRenderDistance() : directives.getShadowDirectives().getNearPlane(),
-			directives.getShadowDirectives().getFarPlane() < 0 ? DHCompat.getRenderDistance() : directives.getShadowDirectives().getFarPlane()));
+			directives.getShadowDirectives().getNearPlane() < 0 ? -DHCompat.getRenderDistance() * 16 : directives.getShadowDirectives().getNearPlane(),
+			directives.getShadowDirectives().getFarPlane() < 0 ? DHCompat.getRenderDistance() * 16 : directives.getShadowDirectives().getFarPlane()));
 	}
 
 	private static void addMatrix(UniformHolder uniforms, String name, Supplier<Matrix4fc> supplier) {
