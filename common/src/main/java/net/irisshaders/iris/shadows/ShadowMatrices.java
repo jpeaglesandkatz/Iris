@@ -10,7 +10,7 @@ public class ShadowMatrices {
 
 	public static Matrix4f createOrthoMatrix(float halfPlaneLength, float nearPlane, float farPlane) {
 		//System.out.println("making a matrix with " + nearPlane + " / " + farPlane + " * " + halfPlaneLength);
-		return new Matrix4f().setOrthoSymmetric(halfPlaneLength, halfPlaneLength, nearPlane, farPlane);
+		return new Matrix4f().setOrthoSymmetric(halfPlaneLength * 2, halfPlaneLength * 2, nearPlane, farPlane);
 	}
 
 	public static Matrix4f createPerspectiveMatrix(float fov) {
