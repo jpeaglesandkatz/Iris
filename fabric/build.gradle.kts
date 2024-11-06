@@ -59,14 +59,14 @@ dependencies {
     addEmbeddedFabricModule("fabric-api-base")
     addEmbeddedFabricModule("fabric-key-binding-api-v1")
     addRuntimeFabricModule("fabric-block-view-api-v2")
-    addRuntimeFabricModule("fabric-renderer-api-v1")
     addRuntimeFabricModule("fabric-rendering-data-attachment-v1")
     modImplementation("net.fabricmc.fabric-api:fabric-rendering-fluids-v1:3.1.14+fd37071f1c") {
         isTransitive = false
     }
     addRuntimeFabricModule("fabric-resource-loader-v0")
+    modImplementation("net.fabricmc.fabric-api:fabric-renderer-api-v1:4.0.6+7feeb73389")
 
-    modImplementation(files(rootDir.resolve("custom_sodium").resolve("sodium-fabric-0.6.0-snapshot+mc24w44a-local.jar")))
+    modImplementation(files(rootDir.resolve("custom_sodium").resolve("sodium-fabric-0.6.0-snapshot+mc24w45a-local.jar")))
     implementAndInclude("org.antlr:antlr4-runtime:4.13.1")
     implementAndInclude("io.github.douira:glsl-transformer:2.0.1")
     implementAndInclude("org.anarres:jcpp:1.4.14")

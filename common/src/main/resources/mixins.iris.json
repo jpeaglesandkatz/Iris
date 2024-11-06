@@ -69,6 +69,8 @@
     "entity_render_context.MixinHorseArmorLayer",
     "entity_render_context.MixinEquipmentLayerRenderer",
     "entity_render_context.MixinItemRenderer",
+    "entity_render_context.MixinItemModelResolver",
+    "entity_render_context.MixinItemStackRenderState",
     "fabulous.MixinDisableFabulousGraphics",
     "gui.MixinGui",
     "gui.MixinVideoSettingsScreen",

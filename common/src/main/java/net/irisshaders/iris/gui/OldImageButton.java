@@ -93,7 +93,7 @@ public class OldImageButton extends Button {
 	}
 
 	public void renderTexture(
-		GuiGraphics pAbstractWidget0,
+		GuiGraphics guiGraphics,
 		ResourceLocation pResourceLocation1,
 		int pInt2,
 		int pInt3,
@@ -112,7 +112,12 @@ public class OldImageButton extends Button {
 			lvInt12 = pInt5 + pInt6;
 		}
 
+		guiGraphics.flush();
+
+		RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
 		RenderSystem.enableDepthTest();
-		pAbstractWidget0.blit(RenderType::guiTextured, pResourceLocation1, pInt2, pInt3, (float) pInt4, (float) lvInt12, pInt7, pInt8, pInt9, pInt10);
+		guiGraphics.blit(RenderType::guiTextured, pResourceLocation1, pInt2, pInt3, (float) pInt4, (float) lvInt12, pInt7, pInt8, pInt9, pInt10);
+
+		guiGraphics.flush();
 	}
 }

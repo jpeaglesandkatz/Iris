@@ -25,17 +25,26 @@ public class IrisButton extends Button {
 
 	@Override
 	protected void renderWidget(GuiGraphics guiGraphics, int pInt1, int pInt2, float pFloat3) {
+		boolean mustFlush = alphaSupplier.getAsFloat() < 0.99f;
+		if (mustFlush) {
+			guiGraphics.flush();
+		}
 		Minecraft lvMinecraft5 = Minecraft.getInstance();
-		RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.isHoveredOrFocused() ? this.alphaSupplier.getAsFloat() * 1.8f : this.alphaSupplier.getAsFloat());
+		RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, Math.min(1.0f,this.isHoveredOrFocused() ? this.alphaSupplier.getAsFloat() * 1.8f : this.alphaSupplier.getAsFloat()));
 		RenderSystem.enableBlend();
 		RenderSystem.enableDepthTest();
 		GuiUtil.bindIrisWidgetsTexture();
 		GuiUtil.drawButton(guiGraphics, this.getX(), this.getY(), this.getWidth(), this.getHeight(), this.isHoveredOrFocused(), this.active);
-		RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alphaSupplier.getAsFloat());
+		if (mustFlush) {
+			guiGraphics.flush();
+		}
+		RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, Math.min(1.0f, this.alphaSupplier.getAsFloat()));
 		int lvInt6 = this.active ? 16777215 : 10526880;
-		this.renderString(guiGraphics, lvMinecraft5.font, lvInt6 | Mth.ceil(this.alphaSupplier.getAsFloat() * 255.0F) << 24);
+		this.renderString(guiGraphics, lvMinecraft5.font, lvInt6);
 		RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-
+		if (mustFlush) {
+			guiGraphics.flush();
+		}
 	}
 
 	public static class Builder {

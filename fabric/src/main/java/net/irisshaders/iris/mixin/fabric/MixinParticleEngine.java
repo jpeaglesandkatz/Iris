@@ -62,9 +62,7 @@ public class MixinParticleEngine implements PhasedParticleEngine {
 
 	static {
 		OPAQUE_PARTICLE_RENDER_TYPES = ImmutableList.of(
-			ParticleRenderType.PARTICLE_SHEET_OPAQUE,
-			ParticleRenderType.CUSTOM,
-			ParticleRenderType.NO_RENDER
+			ParticleRenderType.PARTICLE_SHEET_OPAQUE
 		);
 	}
 

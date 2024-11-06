@@ -57,9 +57,11 @@ dependencies {
 
     modImplementation("net.fabricmc:fabric-loader:$FABRIC_LOADER_VERSION")
 
-    modCompileOnly("net.fabricmc.fabric-api:fabric-renderer-api-v1:3.2.9+1172e897d7")
+    modImplementation("net.fabricmc.fabric-api:fabric-renderer-api-v1:4.0.6+7feeb73389") {
+        isTransitive = false
+    }
 
-    modImplementation(files(rootDir.resolve("custom_sodium").resolve("sodium-fabric-0.6.0-snapshot+mc24w44a-local.jar")))
+    modImplementation(files(rootDir.resolve("custom_sodium").resolve("sodium-fabric-0.6.0-snapshot+mc24w45a-local.jar")))
     modCompileOnly("org.antlr:antlr4-runtime:4.13.1")
     modCompileOnly("io.github.douira:glsl-transformer:2.0.1")
     modCompileOnly("org.anarres:jcpp:1.4.14")
@@ -110,6 +112,7 @@ sourceSets {
 }
 
 loom {
+
     mixin {
         defaultRefmapName = "iris.refmap.json"
         useLegacyMixinAp = false

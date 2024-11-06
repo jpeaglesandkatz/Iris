@@ -9,9 +9,7 @@ public class IrisContainerObjectSelectionList<E extends ContainerObjectSelection
 	}
 
 	@Override
-	protected int getScrollbarPosition() {
-		// Position the scrollbar at the rightmost edge of the screen.
-		// By default, the scrollbar is positioned moderately offset from the center.
+	protected int scrollBarX() {
 		return width - 6;
 	}
 
